@@ -3,24 +3,27 @@ trigger:
 - main
 
 pool:
-  # Use your agent pool if using self-hosted agent, or:
-  vmImage: 'windows-latest'
+  name: 'Default'  # Replace with 'Azure Pipelines' if using MS-hosted agent
+
+variables:
+  buildConfiguration: 'Release'
 
 steps:
 - task: UseDotNet@2
   inputs:
     packageType: 'sdk'
-    version: '7.x.x'
+    version: '7.0.x' # or whatever version you're using
     installationPath: $(Agent.ToolsDirectory)/dotnet
 
-- script: dotnet build john_quiz4_dotnet.sln
-  displayName: 'Build Solution'
+- script: dotnet build --configuration $(buildConfiguration)
+  displayName: 'Build Project'
 
-- script: dotnet publish john_quiz4_dotnet.csproj -c Release -o $(Build.ArtifactStagingDirectory)
-  displayName: 'Publish Artifacts'
+- script: dotnet publish -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)
+  displayName: 'Publish Project'
 
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
     publishLocation: 'Container'
+
