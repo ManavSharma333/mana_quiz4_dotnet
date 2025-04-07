@@ -1,37 +1,38 @@
 trigger:
-- main
+- main  # or 'master', depending on your branch name
 
 pool:
-  name: Default  # Ensure this is pointing to the right agent pool (Default)
+  vmImage: 'windows-latest'  # This uses the latest Windows image available in Azure DevOps
 
 variables:
   buildConfiguration: 'Release'
+  # Define other variables as per your project setup
 
 steps:
 - task: UseDotNet@2
   inputs:
     packageType: 'sdk'
-    version: '6.0.x'
+    version: '6.x'  # Ensure you use the correct .NET SDK version for your project
     installationPath: $(Agent.ToolsDirectory)/dotnet
 
-- task: DotNetCoreCLI@2
+- task: Restore@1
   inputs:
-    command: 'restore'
-    projects: '**/*.csproj'
+    restoreSolution: '**/*.sln'  # Restore dependencies for all .NET solutions
 
-- task: DotNetCoreCLI@2
+- task: Build@1
   inputs:
-    command: 'build'
-    projects: '**/*.csproj'
-    arguments: '--configuration $(buildConfiguration)'
+    solution: '**/*.sln'  # Build all the solutions in your repo
+    configuration: $(buildConfiguration)  # Use 'Release' or 'Debug' based on your need
 
-- task: DotNetCoreCLI@2
+- task: Test@2
   inputs:
-    command: 'publish'
-    projects: '**/*.csproj'
-    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+    testAssembly: '**/*.Test.dll'  # Adjust this to match the location of your test projects
+    testFilterCriteria: ''  # Specify if you need any test filters
 
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'drop'
+    pathToPublish: $(Build.ArtifactStagingDirectory)
+    artifactName: 'drop'  # This will create an artifact named "drop" containing the published files
+    publishLocation: 'Container'
+
+# You can also include additional tasks here for deploying your application if necessary.
