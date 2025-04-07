@@ -1,10 +1,8 @@
 trigger:
-- main  # or your branch name
+- main
 
 pool:
-  name: Default  # This is the agent pool your self-hosted agent is in
-  demands:
-    - Agent.Name -equals quiz4
+  name: Default
 
 variables:
   buildConfiguration: 'Release'
@@ -13,24 +11,27 @@ steps:
 - task: UseDotNet@2
   inputs:
     packageType: 'sdk'
-    version: '7.x.x'  # or 8.x.x, adjust to match your SDK
+    version: '6.0.x'
     installationPath: $(Agent.ToolsDirectory)/dotnet
 
-- script: dotnet build --configuration $(buildConfiguration)
-  displayName: 'Build project'
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'restore'
+    projects: '**/*.csproj'
 
-- script: dotnet test --no-build --verbosity normal
-  displayName: 'Run tests'
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: '**/*.csproj'
+    arguments: '--configuration $(buildConfiguration)'
 
 - task: DotNetCoreCLI@2
   inputs:
     command: 'publish'
-    publishWebProjects: true
+    projects: '**/*.csproj'
     arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
-    zipAfterPublish: true
 
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
-    publishLocation: 'Container'
